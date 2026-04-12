@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CoinLeague Stats - Multi-Coin</title>
+    <style>
+        /* =========================================
+        1. ЗМІННІ ТА БАЗОВІ НАЛАШТУВАННЯ
+        ========================================= */
+        :root {
+            --bg-main: #121212;
+            --bg-surface: #1e1e1e;
+            --bg-surface-hover: #73787e;
+            --bg-header: #2c2c2c;
+            --border-color: #333333;
+            --accent: #007bff;
+            --accent-hover: #d9dbe1;
+            --text-main: #ffffff;
+            --text-muted: #666666;
+            --text-info: #22d3ee;
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, -apple-system, sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+
+            /* Головні налаштування для центрування і підвалу */
+            display: flex;
+            flex-direction: column; /* Вибудовуємо елементи зверху вниз */
+            align-items: center;    /* Центруємо все по горизонталі екрана */
+            min-height: 100vh;      /* Розтягуємо на всю висоту екрана */
+            padding: 20px;
+            margin: 0;
+            line-height: 1.4;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            display: flex;
+            flex-direction: column;
+            flex: 1; /* Змушує контейнер зайняти весь вільний простір і виштовхнути футер вниз */
+        }
+
+        /* =========================================
+           2. ЕЛЕМЕНТИ КЕРУВАННЯ
+           ========================================= */
+        .input-group {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            width: 100%;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            max-width: 400px; /* Трохи збільшив, щоб інпут не був занадто коротким */
+            padding: 12px;
+            background-color: var(--bg-surface);
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            color: white;
+            font-size: 16px;
+            outline: none;
+            text-align: center; /* Текст всередині інпуту теж по центру */
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--accent);
+        }
+
+        button {
+            padding: 12px 20px;
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .loader {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+            color: var(--accent);
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        /* =========================================
+           3. ТАБЛИЦЯ ТА СКРОЛ
+           ========================================= */
+        .table-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            background-color: var(--bg-surface);
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            -webkit-overflow-scrolling: touch;
+            margin-bottom: 20px; /* Відступ між таблицею і підвалом */
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: auto;
+        }
+
+        th, td {
+            padding: 12px 10px;
+            border-bottom: 1px solid var(--border-color);
+            text-align: center; /* Центруємо текст у всіх комірках таблиці */
+        }
+
+        th {
+            background-color: var(--bg-header);
+            color: var(--accent);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            line-height: 1.2;
+            vertical-align: middle;
+        }
+
+        td {
+            font-size: 0.9rem;
+            font-variant-numeric: tabular-nums;
+        }
+
+        tr:hover {
+            background-color: var(--bg-surface-hover);
+        }
+
+        tr:active {
+            background-color: var(--bg-surface-hover);
+        }
+
+        /* =========================================
+           4. ПІДВАЛ (КНОПКИ ТА ТЕКСТ)
+           ========================================= */
+        .main-footer {
+            width: 100%;
+            margin-top: auto; /* Головний секрет: завжди притискає підвал до низу */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            border-top: 1px solid var(--border-color);
+            padding-top: 20px;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            width: 100%;
+        }
+
+        .link-item {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;             /* Зменшено відстань між іконкою і текстом (було 8px) */
+            padding: 8px 16px;    /* Зменшено відступи, щоб кнопка стала вужчою (було 10px 20px) */
+            background-color: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;   /* Трохи менше заокруглення виглядає скромніше */
+            color: var(--text-info);
+            text-decoration: none;
+            font-size: 0.85rem;   /* Менший шрифт (було 0.95rem) */
+            font-weight: 400;     /* Звичайний шрифт замість напівжирного (було 500) */
+            transition: all 0.3s ease;
+        }
+
+        .link-item:hover {
+            background-color: var(--bg-surface-hover);
+            border-color: var(--accent);
+            transform: translateY(-2px);
+        }
+
+        .link-item .icon {
+            font-size: 1rem;      /* Зменшено іконку пропорційно до нового шрифту (було 1.2rem) */
+        }
+
+        .footer-bottom-text {
+            text-align: center;
+            font-size: 0.75rem;
+            color: var(--text-info);
+            opacity: 0.6;
+            line-height: 1.4;
+            margin-top: 15px;
+        }
+
+        .footer-bottom-text p {
+            margin: 3px 0; /* Акуратні відступи між абзацами тексту */
+        }
+
+        /* =========================================
+           5. ДОПОМІЖНІ ЕЛЕМЕНТИ
+           ========================================= */
+        .help-info {
+            margin: 10px 0;
+            font-size: 0.85rem;
+            color: var(--text-info);
+            cursor: pointer;
+            user-select: none;
+            display: block; /* Змінив на block для кращого центрування */
+            text-align: center;
+        }
+
+        .help-info img {
+            max-width: 100%;
+            border-radius: 8px;
+            margin-top: 10px;
+            border: 1px solid var(--border-color);
+        }
+
+        /* =========================================
+           6. МОБІЛЬНА АДАПТАЦІЯ
+           ========================================= */
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+
+            .input-group {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            input[type="text"], button {
+                width: 100%;
+                max-width: 100%;
+            }
+
+            th {
+                white-space: normal;
+                padding: 8px 5px !important;
+                font-size: 11px;
+            }
+
+            td {
+                padding: 8px 5px !important;
+                font-size: 13px;
+            }
+
+            th:first-child, td:first-child {
+                padding-left: 8px !important;
+            }
+
+            th br {
+                display: block;
+                content: "";
+                margin-top: 2px;
+            }
+
+            .table-wrapper {
+                margin-top: 10px;
+            }
+
+            .footer-links {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .link-item {
+                width: 100%;
+                padding: 10px 15px;  /* Менші відступи для мобілки (було 12px 15px) */
+                margin: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="input-group">
+        <input type="text" id="nicknameInput" placeholder="Введіть нікнейм..." oninput="checkInput()">
+        <button id="calcBtn" onclick="runCalculations(); handleRefresh(this)" disabled>Заповнити таблицю</button>
+    </div>
+    <details class="help-info">
+        <summary>Де взяти нікнейм?</summary>
+        <img src="helpn.png" alt="Приклад нікнейму">
+    </details>
+
+    <div id="loader" class="loader">Синхронізація даних...</div>
+    <div id="leagueInfo" class="info-header"></div>
+
+    <div class="table-wrapper">
+        <table>
+            <thead>
+            <tr>
+                <th>Койн</th>
+                <th>Потужність<br>мережі</th>
+                <th id="nextLeagueHeader">Необхідна<br>потужність<br><span>лігою вище</span></th>
+                <th>День</th>
+                <th>Тиждень</th>
+                <th>Місяць</th>
+            </tr>
+            </thead>
+            <tbody id="tableBody">
+            </tbody>
+        </table>
+    </div>
+
+    <div class="footer-links">
+        <a href="https://t.me/+eyBWauwhjW80M2Qy" target="_blank" class="link-item">
+            <span class="icon">🤖</span> Про виявлені неточності писати сюди
+        </a>
+        <a href="https://t.me/network_roller_stats_bot" target="_blank" class="link-item">
+            <span class="icon">🤖</span> Копірнути мережу для ліги тут
+        </a>
+        <a href="https://varabchuk1.github.io/rollersmartcalc-v31/" target="_blank" class="link-item">
+            <span class="icon">🌐</span> RollerSmartCalc тут
+        </a>
+        <a href="javascript:void(0)" onclick="copyTRXAddress()" class="link-item" id="copy-btn">
+            <span class="icon">☕</span> Автору на чай TRX (копіювати адресу)
+        </a>
+    </div>
+    <div class="footer-bottom-text">
+        <p>© 2026. Використано ендпойнти BurakTemelkaya.</p>
+        <p>Конвертація в $ за допомогою api.coingecko.com. Розроблено для спільноти RollerCoin.</p>
+        <p>Режим тестування</p>
+    </div>
+</div>
+
+<script>
+    const PROXY = 'https://api.codetabs.com/v1/proxy?quest=';
+    const API_BASE = 'https://rollercoinapi.buraktemelkaya.com/api';
+
+
+
+    async function runCalculations() {
+        let results = [];
+        const userNick = document.getElementById('nicknameInput').value;
+        localStorage.setItem('userNickname', userNick);
+
+        const getCoinConfig = function(coinName) {
+            const found = CURRENCY_CONFIG.find(function(c) {
+                return c.name === coinName;
+            });
+            return found || CURRENCY_CONFIG[CURRENCY_CONFIG.length - 1]; // Повертає останній елемент (default), якщо не знайдено
+        };
+
+        const formatPower = (power) => {
+            let p = parseFloat(power);
+            const units = ['GH/s', 'TH/s', 'PH/s', 'EH/s', 'ZH/s'];
+            let unitIndex = 0;
+
+            while (p >= 1000 && unitIndex < units.length - 1) {
+                p /= 1000;
+                unitIndex++;
+            }
+
+            return `${p.toFixed(3)} ${units[unitIndex]}`;
+        };
+
+        const nick = document.getElementById('nicknameInput').value;
+        const loader = document.getElementById('loader');
+        const tableBody = document.getElementById('tableBody');
+        const leagueInfo = document.getElementById('leagueInfo');
+
+        if (!nick) return;
+
+        loader.style.display = 'block';
+        tableBody.innerHTML = '';
+        leagueInfo.innerHTML = '';
+
+        try {
+            await loadRewardsData();
+            await loadCryptoPrices();
+
+            const userResp = await fetch(PROXY + encodeURIComponent(`${API_BASE}/RollercoinUser?userName=${nick}`));
+            const userData = await userResp.json();
+
+            const userPower = userData.userPowerResponseDto.current_Power || 0;
+            const userLeagueId = userData.userProfileResponseDto.league_Id;
+
+            const leagueResp = await fetch(PROXY + encodeURIComponent(`${API_BASE}/League`));
+            const leaguesData = await leagueResp.json();
+
+            const currentLeague = leaguesData.find(l => l.id === userLeagueId) || leaguesData[0];
+
+            const nextLeagueId = leaguesData.findIndex(l => l.id === userLeagueId) || null;
+
+            const nextLeague = leaguesData[nextLeagueId + 1];
+            document.querySelector("#nextLeagueHeader span")
+                .textContent = nextLeague ? nextLeague.title : "Макс. рівень";
+
+            leagueInfo.style.textAlign = "center";
+            leagueInfo.style.width = "100%";
+
+
+            leagueInfo.innerHTML = `ПОТОЧНА ЛІГА: ${currentLeague.title}<br>ПОТУЖНІСТЬ: ${formatPower(userPower)}`;
+
+
+            currentLeague.currencies.forEach(coin => {
+                console.log(coin.name);
+                const netPower = coin.totalPower;
+
+                let name = coin.name.toLowerCase().replace('_small', '').trim();
+
+                const nextLeagueCurrencies = nextLeague.currencies.find(c => c.name === coin.name);
+
+                let nextNetPower;
+                let nextReward;
+
+                if (nextLeagueCurrencies) {
+                    nextNetPower = nextLeagueCurrencies?.totalPower || 0;
+                    nextReward = nextLeagueCurrencies?.payoutAmount || 0;
+
+                }
+
+                if (name === 'sat') {
+                    name = 'btc'
+                }
+
+                if (name === 'matic') {
+                    name = 'pol'
+                }
+
+                const reward = getRewardForCoin(name, coin.payoutAmount);
+
+                const blockTime = coin.duration;
+                let { divisor, prec, geckoId} = getCoinConfig(name);
+
+
+                // 1. Рахуємо частку від блоку
+                const rewardPerBlock = (userPower / netPower) * reward;
+
+                const neededPower = (rewardPerBlock * nextNetPower) / nextReward || 0;
+                console.log(neededPower);
+
+                // 2. Рахуємо кількість блоків на добу
+                const blocksPerDay = 86400 / blockTime;
+                // 3. Фінальний результат з урахуванням дільника (to_small)
+                const dailyRaw = (rewardPerBlock * blocksPerDay) / divisor;
+
+                let usdPrice = 0;
+                if (name === 'rlt' || name === 'rst' || name === 'hmt' || name === 'usdt') {
+                    usdPrice = dailyRaw; // 1 RLT = 1 USD
+                } else if (geckoId && cryptoPrices[geckoId]) {
+                    usdPrice = dailyRaw * cryptoPrices[geckoId];
+                }
+
+                results.push({
+                    name: name,
+                    netPower: netPower,
+                    neededPower: neededPower,
+                    dailyRaw: dailyRaw,
+                    usdPrice: usdPrice,
+                    prec: prec
+                });
+            });
+
+        } catch (e) {
+            console.error(e);
+            tableBody.innerHTML = `<tr><td colspan="5" style="color:red; text-align:center;">Помилка отримання даних</td></tr>`;
+        } finally {
+            loader.style.display = 'none';
+        }
+        results.sort((a, b) => b.usdPrice - a.usdPrice);
+
+        results.forEach(data => {
+            const isSpecial = ['rlt', 'rst', 'hmt'].includes(data.name);
+
+            const row = `<tr>
+        <td style="color: #22d3ee; font-weight: bold;">${data.name}</td>
+        <td>${formatPower(data.netPower)}</td>
+        <td>${data.neededPower > 0 ? formatPower(data.neededPower) : "Монета не доступна"}</td>
+        <td style="color: #22d3ee;">${data.dailyRaw.toFixed(data.prec)}
+            <br><span style="color: #37f31c;">${data.usdPrice.toFixed(2)}${isSpecial ? '' : '$'}</span></td>
+        <td>${(data.dailyRaw * 7).toFixed(data.prec > 6 ? 6 : data.prec)}
+            <br>${(data.usdPrice * 7).toFixed(2)}${isSpecial ? '' : '$'}</td>
+        <td>${(data.dailyRaw * 30).toFixed(data.prec > 4 ? 4 : data.prec)}
+            <br>${(data.usdPrice * 30).toFixed(2)}${isSpecial ? '' : '$'}</td>
+    </tr>`;
+
+            tableBody.innerHTML += row;
+        });
+    }
+</script>
+<script src="script.js"></script>
+
+</body>
+</html>
