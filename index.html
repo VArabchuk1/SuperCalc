@@ -290,11 +290,11 @@
 
 <div class="container">
     <div class="input-group">
-        <input type="text" id="nicknameInput" placeholder="Введіть частину свого посилання після /p/..." oninput="checkInput()">
+        <input type="text" id="nicknameInput" placeholder="Введіть нікнейм..." oninput="checkInput()">
         <button id="calcBtn" onclick="runCalculations(); handleRefresh(this)" disabled>Заповнити таблицю</button>
     </div>
     <details class="help-info">
-        <summary>Що вставляти підказка?</summary>
+        <summary>Де взяти нікнейм?</summary>
         <img src="helpn.png" alt="Приклад нікнейму">
     </details>
 
@@ -419,10 +419,12 @@
 
                 let nextNetPower;
                 let nextReward;
+                let nextBlockTime;
 
                 if (nextLeagueCurrencies) {
                     nextNetPower = nextLeagueCurrencies?.totalPower || 0;
                     nextReward = nextLeagueCurrencies?.payoutAmount || 0;
+                    nextBlockTime = nextLeagueCurrencies?.duration || 0;
 
                 }
 
@@ -443,8 +445,10 @@
                 // 1. Рахуємо частку від блоку
                 const rewardPerBlock = (userPower / netPower) * reward;
 
-                const neededPower = (rewardPerBlock * nextNetPower) / nextReward || 0;
-                console.log(neededPower);
+                const diff = blockTime / nextBlockTime;
+                console.log("diff" + diff);
+
+                const neededPower = ((rewardPerBlock * nextNetPower) / nextReward) / diff || 0;
 
                 // 2. Рахуємо кількість блоків на добу
                 const blocksPerDay = 86400 / blockTime;
@@ -496,6 +500,6 @@
     }
 </script>
 <script src="script.js"></script>
-<img src="https://api.counterapi.dev/v2/vasil-arabcuks-team-3598/supercalc/up" style="display:none;">
+
 </body>
 </html>
