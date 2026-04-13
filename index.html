@@ -284,17 +284,24 @@
                 margin: 0;
             }
         }
+        label {
+            color: #c2c6cf;
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div class="input-group">
-        <input type="text" id="nicknameInput" placeholder="Введіть нікнейм..." oninput="checkInput()">
+        <label style="font-size: 12px;">
+            Введіть частину посилання на свій профіль після /p/
+        </label>
+        <input style="font-size: 12px;" type="text"
+               id="nicknameInput" placeholder="Ввести..." oninput="checkInput()">
         <button id="calcBtn" onclick="runCalculations(); handleRefresh(this)" disabled>Заповнити таблицю</button>
     </div>
     <details class="help-info">
-        <summary>Де взяти нікнейм?</summary>
+        <summary>Де взяти посилання на профіль?</summary>
         <img src="helpn.png" alt="Приклад нікнейму">
     </details>
 
