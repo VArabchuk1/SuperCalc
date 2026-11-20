@@ -1,512 +1,252 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CoinLeague Stats - Multi-Coin</title>
-    <style>
-        /* =========================================
-        1. ЗМІННІ ТА БАЗОВІ НАЛАШТУВАННЯ
-        ========================================= */
-        :root {
-            --bg-main: #121212;
-            --bg-surface: #1e1e1e;
-            --bg-surface-hover: #73787e;
-            --bg-header: #2c2c2c;
-            --border-color: #333333;
-            --accent: #007bff;
-            --accent-hover: #d9dbe1;
-            --text-main: #ffffff;
-            --text-muted: #666666;
-            --text-info: #22d3ee;
-        }
-
-        *, *::before, *::after {
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Roboto, -apple-system, sans-serif;
-            background-color: var(--bg-main);
-            color: var(--text-main);
-
-            /* Головні налаштування для центрування і підвалу */
-            display: flex;
-            flex-direction: column; /* Вибудовуємо елементи зверху вниз */
-            align-items: center;    /* Центруємо все по горизонталі екрана */
-            min-height: 100vh;      /* Розтягуємо на всю висоту екрана */
-            padding: 20px;
-            margin: 0;
-            line-height: 1.4;
-        }
-
-        .container {
-            width: 100%;
-            max-width: 900px;
-            display: flex;
-            flex-direction: column;
-            flex: 1; /* Змушує контейнер зайняти весь вільний простір і виштовхнути футер вниз */
-        }
-
-        /* =========================================
-           2. ЕЛЕМЕНТИ КЕРУВАННЯ
-           ========================================= */
-        .input-group {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 20px;
-            width: 100%;
-        }
-
-        input[type="text"] {
-            flex: 1;
-            max-width: 400px; /* Трохи збільшив, щоб інпут не був занадто коротким */
-            padding: 12px;
-            background-color: var(--bg-surface);
-            border: 2px solid var(--border-color);
-            border-radius: 8px;
-            color: white;
-            font-size: 16px;
-            outline: none;
-            text-align: center; /* Текст всередині інпуту теж по центру */
-        }
-
-        input[type="text"]:focus {
-            border-color: var(--accent);
-        }
-
-        button {
-            padding: 12px 20px;
-            background-color: var(--accent);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-
-        button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .loader {
-            display: none;
-            text-align: center;
-            margin: 20px 0;
-            color: var(--accent);
-            font-weight: bold;
-            font-size: 1.1rem;
-        }
-
-        /* =========================================
-           3. ТАБЛИЦЯ ТА СКРОЛ
-           ========================================= */
-        .table-wrapper {
-            width: 100%;
-            overflow-x: auto;
-            background-color: var(--bg-surface);
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
-            -webkit-overflow-scrolling: touch;
-            margin-bottom: 20px; /* Відступ між таблицею і підвалом */
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            table-layout: auto;
-        }
-
-        th, td {
-            padding: 12px 10px;
-            border-bottom: 1px solid var(--border-color);
-            text-align: center; /* Центруємо текст у всіх комірках таблиці */
-        }
-
-        th {
-            background-color: var(--bg-header);
-            color: var(--accent);
-            font-size: 0.8rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            line-height: 1.2;
-            vertical-align: middle;
-        }
-
-        td {
-            font-size: 0.9rem;
-            font-variant-numeric: tabular-nums;
-        }
-
-        tr:hover {
-            background-color: var(--bg-surface-hover);
-        }
-
-        tr:active {
-            background-color: var(--bg-surface-hover);
-        }
-
-        /* =========================================
-           4. ПІДВАЛ (КНОПКИ ТА ТЕКСТ)
-           ========================================= */
-        .main-footer {
-            width: 100%;
-            margin-top: auto; /* Головний секрет: завжди притискає підвал до низу */
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            border-top: 1px solid var(--border-color);
-            padding-top: 20px;
-        }
-
-        .footer-links {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            flex-wrap: wrap;
-            width: 100%;
-        }
-
-        .link-item {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;             /* Зменшено відстань між іконкою і текстом (було 8px) */
-            padding: 8px 16px;    /* Зменшено відступи, щоб кнопка стала вужчою (було 10px 20px) */
-            background-color: var(--bg-surface);
-            border: 1px solid var(--border-color);
-            border-radius: 6px;   /* Трохи менше заокруглення виглядає скромніше */
-            color: var(--text-info);
-            text-decoration: none;
-            font-size: 0.85rem;   /* Менший шрифт (було 0.95rem) */
-            font-weight: 400;     /* Звичайний шрифт замість напівжирного (було 500) */
-            transition: all 0.3s ease;
-        }
-
-        .link-item:hover {
-            background-color: var(--bg-surface-hover);
-            border-color: var(--accent);
-            transform: translateY(-2px);
-        }
-
-        .link-item .icon {
-            font-size: 1rem;      /* Зменшено іконку пропорційно до нового шрифту (було 1.2rem) */
-        }
-
-        .footer-bottom-text {
-            text-align: center;
-            font-size: 0.75rem;
-            color: var(--text-info);
-            opacity: 0.6;
-            line-height: 1.4;
-            margin-top: 15px;
-        }
-
-        .footer-bottom-text p {
-            margin: 3px 0; /* Акуратні відступи між абзацами тексту */
-        }
-
-        /* =========================================
-           5. ДОПОМІЖНІ ЕЛЕМЕНТИ
-           ========================================= */
-        .help-info {
-            margin: 10px 0;
-            font-size: 0.85rem;
-            color: var(--text-info);
-            cursor: pointer;
-            user-select: none;
-            display: block; /* Змінив на block для кращого центрування */
-            text-align: center;
-        }
-
-        .help-info img {
-            max-width: 100%;
-            border-radius: 8px;
-            margin-top: 10px;
-            border: 1px solid var(--border-color);
-        }
-
-        /* =========================================
-           6. МОБІЛЬНА АДАПТАЦІЯ
-           ========================================= */
-        @media (max-width: 600px) {
-            body {
-                padding: 10px;
-            }
-
-            .input-group {
-                flex-direction: column;
-                align-items: center;
-            }
-
-            input[type="text"], button {
-                width: 100%;
-                max-width: 100%;
-            }
-
-            th {
-                white-space: normal;
-                padding: 8px 5px !important;
-                font-size: 11px;
-            }
-
-            td {
-                padding: 8px 5px !important;
-                font-size: 13px;
-            }
-
-            th:first-child, td:first-child {
-                padding-left: 8px !important;
-            }
-
-            th br {
-                display: block;
-                content: "";
-                margin-top: 2px;
-            }
-
-            .table-wrapper {
-                margin-top: 10px;
-            }
-
-            .footer-links {
-                flex-direction: column;
-                gap: 10px;
-            }
-
-            .link-item {
-                width: 100%;
-                padding: 10px 15px;  /* Менші відступи для мобілки (було 12px 15px) */
-                margin: 0;
-            }
-        }
-        label {
-            color: #c2c6cf;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hamster Expedition Tracker</title>
+<style>
+:root{--bg:#10162b;--card:#16213e;--line:#2a3350;--tx:#e8ecf8;--mut:#9aa4bd;--ok:#00e676;--mid:#ffb74d;--bad:#ff5252;--acc:#00bcd4}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:14px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;padding:12px 12px 40px}
+h1{font-size:18px;margin:4px 0 12px}h2{font-size:14px;margin:0 0 10px;color:var(--acc);text-transform:uppercase;letter-spacing:.04em}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:12px}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+label{font-size:11px;color:var(--mut);display:block;margin-bottom:3px}
+input,select,button{font:inherit;color:var(--tx);background:#0e1530;border:1px solid var(--line);border-radius:8px;padding:6px 8px}
+input[type=number]{width:70px;text-align:center}button{cursor:pointer}button:hover{border-color:var(--acc)}
+.wrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px}
+table{border-collapse:collapse;width:100%;font-size:12px}
+th,td{padding:6px 5px;border-bottom:1px solid var(--line);text-align:center;white-space:nowrap}
+th{background:#0e1530;color:var(--mut);font-weight:600;font-size:11px}th small{display:block;font-weight:400;opacity:.7}
+td.name{text-align:left;font-weight:700;position:sticky;left:0;background:var(--card);z-index:1}
+tr.hid{opacity:.4}.inactive{opacity:.55}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.stat{background:#0e1530;border-radius:10px;padding:10px;text-align:center}.stat b{display:block;font-size:20px}.stat span{font-size:11px;color:var(--mut)}
+.good{color:var(--ok)}.mid{color:var(--mid)}.bad{color:var(--bad)}
+.gauge{position:relative;height:10px;border-radius:6px;background:linear-gradient(90deg,#00e676,#ffeb3b 50%,#ff5252);margin:6px 0 2px}
+.gauge i{position:absolute;top:-4px;width:3px;height:18px;background:#fff;border-radius:2px;transform:translateX(-50%)}
+.gauge i.exp{background:#0e1530;border:1px solid #fff}
+.legend{display:flex;justify-content:space-between;font-size:10px;color:var(--mut)}
+.bar{height:5px;border-radius:3px;background:#0e1530;margin:3px 6px;overflow:hidden}.bar i{display:block;height:100%}
+.cell b{display:block;font-size:13px}.cell small{font-size:10px;color:var(--mut)}
+.act button{padding:2px 8px;margin:0 2px}.ok-b{color:var(--ok)}.no-b{color:var(--bad)}
+.note{font-size:11px;color:var(--mut);margin:8px 0 0}
+.seg{display:flex;flex-wrap:wrap;max-width:100%;border:1px solid var(--line);border-radius:8px;overflow:hidden}.seg button{border:0;border-radius:0;padding:6px 10px;flex:1 1 auto}.seg button.on{background:var(--acc);color:#001}
+.av{width:34px;height:34px;object-fit:contain;image-rendering:pixelated;vertical-align:middle;margin-right:6px}
+.av-e{font-size:24px;vertical-align:middle;margin-right:6px}
+.vd{display:block;font-weight:700;font-size:11px}.cell.best{box-shadow:inset 0 0 0 1px var(--ok);background:rgba(0,230,118,.06)}
+.dots{display:block;margin-top:3px;letter-spacing:1px;font-size:9px;min-height:11px}
+.dots .ok{color:var(--ok)}.dots .no{color:var(--bad)}
+.toast{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);background:#0e1530;border:1px solid var(--acc);border-radius:12px;padding:10px 14px;z-index:50;display:none;align-items:center;gap:12px;max-width:92vw;box-shadow:0 4px 20px #000a}
+.toast.on{display:flex}.toast button{background:var(--acc);color:#001;border:0;font-weight:700}
+</style>
 </head>
 <body>
+<h1>🐹 Hamster Expedition Tracker</h1>
 
-<div class="container">
-    <div class="input-group">
-        <label style="font-size: 12px;">
-            Введіть частину посилання на свій профіль після /p/
-        </label>
-        <input style="font-size: 12px;" type="text"
-               id="nicknameInput" placeholder="Ввести..." oninput="checkInput()">
-        <button id="calcBtn" onclick="runCalculations(); handleRefresh(this)" disabled>Заповнити таблицю</button>
-    </div>
-    <details class="help-info">
-        <summary>Де взяти посилання на профіль?</summary>
-        <img src="helpn.png" alt="Приклад нікнейму">
-    </details>
-
-    <div id="loader" class="loader">Синхронізація даних...</div>
-    <div id="leagueInfo" class="info-header"></div>
-
-    <div class="table-wrapper">
-        <table>
-            <thead>
-            <tr>
-                <th>Койн</th>
-                <th>Потужність<br>мережі</th>
-                <th id="nextLeagueHeader">Необхідна<br>потужність<br><span>лігою вище</span></th>
-                <th>День</th>
-                <th>Тиждень</th>
-                <th>Місяць</th>
-            </tr>
-            </thead>
-            <tbody id="tableBody">
-            </tbody>
-        </table>
-    </div>
-
-    <div class="footer-links">
-        <a href="https://t.me/+eyBWauwhjW80M2Qy" target="_blank" class="link-item">
-            <span class="icon">🤖</span> Про виявлені неточності писати сюди
-        </a>
-        <a href="https://t.me/network_roller_stats_bot" target="_blank" class="link-item">
-            <span class="icon">🤖</span> Копірнути мережу для ліги тут
-        </a>
-        <a href="https://varabchuk1.github.io/rollersmartcalc-v31/" target="_blank" class="link-item">
-            <span class="icon">🌐</span> RollerSmartCalc тут
-        </a>
-        <a href="javascript:void(0)" onclick="copyTRXAddress()" class="link-item" id="copy-btn">
-            <span class="icon">☕</span> Автору на чай TRX (копіювати адресу)
-        </a>
-    </div>
-    <div class="footer-bottom-text">
-        <p>© 2026. Використано ендпойнти BurakTemelkaya.</p>
-        <p>Конвертація в $ за допомогою api.coingecko.com. Розроблено для спільноти RollerCoin.</p>
-        <p>Режим тестування</p>
-    </div>
+<div class="card">
+  <h2>Підсумок</h2>
+  <div class="cards" id="sum"></div>
+  <div style="margin-top:12px"><label>Шкала смертності: ⚪ спостережена · ◻ очікувана за формулою</label>
+    <div class="gauge" id="gauge"></div><div class="legend"><span>0% смерті</span><span>50%</span><span>100%</span></div></div>
 </div>
 
+<div class="card">
+  <h2>Налаштування</h2>
+  <div class="row">
+    <div><label>Модель ризику смерті (для кожної пари хом'як × експедиція)</label>
+      <div class="seg" id="mode"><button data-m="hard">Жорстке</button><button data-m="prop">Пропорційне</button><button data-m="obs">Спостереж.</button></div></div>
+    <div><label>Пропорційне: сила вирівнювання α</label><input id="al" type="number" min="0" step="0.1"></div>
+    <div><label>За спостереженнями: вага теорії k</label><input id="kc" type="number" min="0.5" step="0.5"></div>
+    <label style="margin:0"><input type="checkbox" id="showHid"> показати приховані</label>
+    <button id="exp">⬇ Excel</button>
+    <button onclick="document.getElementById('imp').click()">⬆ Імпорт</button><input type="file" id="imp" accept=".xlsx,.xls,.csv,.json" hidden>
+    <button id="clr">Очистити журнал</button>
+    <button id="imgNet">🖼 Підвантажити картинки з сайту</button>
+    <button onclick="document.getElementById('imgFiles').click()">🖼 Вибрати файли</button><input type="file" id="imgFiles" accept="image/*" multiple hidden>
+    <button onclick="document.getElementById('imgDir').click()">📁 Вибрати папку</button><input type="file" id="imgDir" webkitdirectory hidden>
+    <details id="hidBox" style="display:none"><summary class="note" style="cursor:pointer;margin:0;color:var(--acc)">👁 Приховані: <span id="hidCnt"></span></summary><div id="hidList" style="margin-top:6px"></div><button id="hidBack">Повернути вибраних</button></details>
+    <span id="imgMsg" class="note" style="margin:0"></span>
+  </div>
+  <p class="note">Ходи ✓/✗ впливають <b>лише на ризик смерті цієї пари</b> «хом'як × експедиція». Велике число в клітинці — базовий шанс виживання (теорія), він не змінюється; змінюється лише ☠ ризик смерті й вердикт. Нехай t — теоретичний ризик, n — спроб, D — смертей. <b>Жорстке вирівнювання:</b> ризик = (n+1)·t − D, обмежений 0–100% (при 50%: вижив → наступна смерть 100%, помер → виживе). <b>Пропорційне:</b> ризик = t − α·(D/n − t): багато смертей зменшує ризик, багато виживань — збільшує. <b>За спостереженнями:</b> ризик = (D + k·t) ÷ (n + k): більше смертей — вищий ризик. Нижче таблиця «Співвідношення» показує, чи збігається реальний % виживань із заявленим</p>
+</div>
+
+<div class="card">
+  <h2>Хом'яки · експедиції <button id="undo" style="float:right;text-transform:none;letter-spacing:0">↩ Скасувати останній</button></h2>
+  <div class="wrap"><table><thead id="head"></thead><tbody id="body"></tbody></table></div>
+  <div class="row" style="margin-top:10px"><input id="nn" placeholder="Новий хом'як" style="flex:1;min-width:120px"><input id="ns" type="number" placeholder="Стати" style="width:80px"><button id="add">＋</button></div>
+  <p class="note">В клітинці: виживання за обраною моделлю, шкала ризику смерті й кнопки ✓ (пройшов) / ✗ (помер). Під відсотком — вердикт: 🟢 виживе (смерть ≤25%), 🟡 радше виживе (≤45%), 🟠 50/50 (≤55%), 🔴 радше помре (≤75%), 💀 помре (&gt;75%). Зелена рамка — найкраща для цього хом'яка експедиція (без неактивних). Рівень, бонус і стартову серію можна міняти руками.</p>
+</div>
+
+<div class="card"><h2>Останні результати по експедиції</h2>
+  <div class="row"><div><label>Експедиція</label><select id="rMap"></select></div><div><label>Скільки показати</label><select id="rN"><option>5</option><option>10</option><option>20</option><option>50</option><option>100</option></select></div></div>
+  <div class="wrap" style="margin-top:10px"><table><thead><tr><th>Дата</th><th>Хом'як</th><th>Результат</th><th>Рівень</th><th>Серія до</th><th>Ризик (теорія)</th></tr></thead><tbody id="recent"></tbody></table></div></div>
+
+<div class="card"><h2>Співвідношення виживань до смертей vs заявлений %</h2>
+  <div class="wrap"><table><thead><tr><th>Хом'як</th><th>Експедиція</th><th>✓</th><th>✗</th><th>Реально вижив</th><th>Заявлено (теорія)</th><th>Різниця</th></tr></thead><tbody id="bal"></tbody></table></div>
+  <p class="note">«Заявлено» — середнє теоретичне виживання на момент кожної спроби. Різниця близька до 0 при великій кількості спроб означає, що відсоток збігається з реальністю. Рядок «УСЬОГО» — по всій базі.</p></div>
+
+<div class="card"><h2>Аналіз: смерті залежно від серії успіхів</h2>
+  <div class="wrap"><table><thead><tr><th>Серія до спроби</th><th>Спроб</th><th>Смертей</th><th>Спостер. смерть</th><th>Очікувана (теорія)</th><th>Коефіцієнт</th></tr></thead><tbody id="byStreak"></tbody></table></div>
+  <p class="note">Якщо після успіхів ризик справді росте, спостережена смертність у рядках 1, 2, 3+ буде вищою за очікувану (коефіцієнт &gt; 1). Для висновків треба хоча б десятки спроб у кожному рядку.</p></div>
+
+<div class="card"><h2>Аналіз по експедиціях</h2>
+  <div class="wrap"><table><thead><tr><th>Експедиція</th><th>Спроб</th><th>Смертей</th><th>Спостер. смерть</th><th>Очікувана</th><th>Коефіцієнт</th></tr></thead><tbody id="byMap"></tbody></table></div></div>
+
+<div class="card"><h2>Журнал</h2>
+  <div class="wrap"><table><thead><tr><th>Дата</th><th>Хом'як</th><th>Експедиція</th><th>Результат</th><th>Рівень</th><th>Серія до</th><th>Ризик (теорія)</th><th></th></tr></thead><tbody id="log"></tbody></table></div></div>
+
+<div class="toast" id="toast"><span id="toastTx"></span><button id="toastUndo">↩ Скасувати</button></div>
 <script>
-    const PROXY = 'https://api.codetabs.com/v1/proxy?quest=';
-    const API_BASE = 'https://api.rollercoincalculator.app/api';
+'use strict';
+const KEY='hamtracker_v1';
+const MAPS=[{id:'plague',n:'Plague City',d:6,h:20},{id:'shrine',n:'Lost Shrine',d:10,h:30},{id:'valleys',n:'Dark Valleys',d:7,h:24},{id:'beach',n:'Beach Walk',d:8,h:24},{id:'valhalla',n:'Valhalla Trail',d:8,h:18},{id:'forest',n:'Deep Forest',d:2,h:3},{id:'tousland',n:'Tousland',d:4,h:12,off:true}];
+// крива виживання (Plague City) від статів без бонусів — rollercoincalculator.app
+const CURVE=[[50,19.83],[65,20.62],[70,20.98],[90,22.90],[100,24.15],[110,25.59],[119,27.05],[149,33.04],[150,33.27],[159,35.42],[160,35.67],[175,39.63],[180,41.05],[190,44.03],[200,47.19],[205,48.85],[210,50.56],[215,52.31],[220,54.11],[224,55.58],[230,57.85],[255,68.06],[260,70.24]];
+const DEF=[['BB Smoke',210,0],['Chillz',175,0],["Jack O'Mine",220,0],['Cuscuz',255,0],['Lady Minerra',205,-5],['SOLaire',175,5],['GFeast',260,0],['Gordon Hamzy',210,10],['Davy Coins',200,5],['Captain Jack Pot',220,5],["Uncle'Azoth",230,0],['Eliza Bit',180,0],['Joga Bonito',210,5],['Badncle',180,0],['Goodncle',180,0],['Hammy Hooks',205,10],['Kitsumi',220,0],['Partello',90,0],['Lucky Red',200,0],['Sir Catch-a-Lot',215,0],['Lord Hexron',205,0],['Anomaly',160,0],['Plague Dancer',195,15],['Mr. Jack',65,0],['Mamita',200,0],['Dusty McUncle',200,0],['Banjo Walker',175,0],['Valkirita',205,0],['Birthday Bob',70,0],['Uncle',200,0],['Naughty Claus',185,10],['The Hamster',50,0],['The Dracula',150,0],['Big Daddy',190,0],['Guile',100,5],['Cowham',110,0]]
+ .map(([name,stats,bonus])=>{const bl=(name==='Cuscuz'||name==='GFeast')?50:1;return{name,stats,bonus,bl,lvl:bl,start:0,hidden:false}});
 
+const $=id=>document.getElementById(id);
+const slug=n=>n.toLowerCase().replace(/['’.]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+const REMOTE='https://rollercoincalculator.app/assets/rollercoin/hamsters/pets/';
+const IMG={};  // slug -> objectURL з IndexedDB
+const idb=()=>new Promise((res,rej)=>{const r=indexedDB.open('hamimg',1);r.onupgradeneeded=()=>r.result.createObjectStore('i');r.onsuccess=()=>res(r.result);r.onerror=rej});
+async function idbPut(k,blob){const d=await idb();return new Promise((res,rej)=>{const t=d.transaction('i','readwrite');t.objectStore('i').put(blob,k);t.oncomplete=res;t.onerror=rej})}
+async function idbLoad(){try{const d=await idb();await new Promise(res=>{const q=d.transaction('i').objectStore('i').openCursor();q.onsuccess=()=>{const c=q.result;if(c){IMG[c.key]=URL.createObjectURL(c.value);c.continue()}else res()};q.onerror=res})}catch(e){}}
+function avatar(h){const sl=slug(h.name),lv=h.bl>=50?'lvl50':'lvl01';
+  return`<img class="av" loading="lazy" alt="" src="${IMG[sl]||'img/hamsters/'+sl+'.png'}" data-r="${IMG[sl]?'':REMOTE+sl+'/'+lv+'/idle.png?v=2'}" onerror="avErr(this)">`}
+window.avErr=function(im){if(im.dataset.r){im.src=im.dataset.r;im.dataset.r='';im.referrerPolicy='no-referrer'}else{const sp=document.createElement('span');sp.className='av-e';sp.textContent='🐹';im.replaceWith(sp)}};
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let S=load();
+function load(){try{const o=JSON.parse(localStorage.getItem(KEY));if(o&&o.ham){if(!['hard','prop','obs'].includes(o.mode)){o.mode='hard'}if(o.al===undefined)o.al=1;if(o.kc===undefined)o.kc=5;return o}}catch(e){}
+  return{ham:JSON.parse(JSON.stringify(DEF)),log:[],mode:'hard',k:20,kc:5,al:1,showHid:false}}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+// перемальовка після правки поля відкладена, щоб не з'їсти тап по кнопці ✓/✗, який викликав втрату фокусу
+let rt;const lazyRender=()=>{clearTimeout(rt);rt=setTimeout(render,400)};
 
+/* ---------- модель ---------- */
+function curve(x){const n=CURVE.length;let i=0;if(x<=CURVE[0][0])i=0;else if(x>=CURVE[n-1][0])i=n-2;else while(x>CURVE[i+1][0])i++;
+  const[x0,y0]=CURVE[i],[x1,y1]=CURVE[i+1];return y0+(x-x0)*(y1-y0)/(x1-x0)}
+const mapOf=id=>MAPS.find(m=>m.id===id)||MAPS[0];
+const clamp=v=>Math.max(0,Math.min(100,v));
+const stats=h=>h.stats+Math.max(0,h.lvl-h.bl);
+const theoDeath=(h,m)=>100-clamp(curve(stats(h))+h.bonus+(10/9)*(6-mapOf(m).d));
+const bucket=s=>Math.min(s,3);
 
-    async function runCalculations() {
-        let results = [];
-        const userNick = document.getElementById('nicknameInput').value;
-        localStorage.setItem('userNickname', userNick);
+// серія кожного хом'яка до кожного запису (з журналу, у хронологічному порядку)
+function streakNow(h){let s=h.start||0;for(const e of S.log)if(e.ham===h.name)s=e.ok?s+1:0;return s}
 
-        const getCoinConfig = function(coinName) {
-            const found = CURRENCY_CONFIG.find(function(c) {
-                return c.name === coinName;
-            });
-            return found || CURRENCY_CONFIG[CURRENCY_CONFIG.length - 1]; // Повертає останній елемент (default), якщо не знайдено
-        };
+// суми «спостережено / очікувано» для коригування
+function agg(filter){let n=0,d=0,e=0;for(const r of S.log){if(filter&&!filter(r))continue;n++;if(!r.ok)d++;e+=r.risk/100}return{n,d,e}}
+function ratio(a){return(a.d+S.k)/(a.e+S.k)}
+// статистика конкретної пари «хом'як × експедиція»
+function cellStat(h,m){let n=0,d=0,sc=0;for(const e of S.log)if(e.ham===h.name&&e.map===m){n++;if(e.ok)sc++;else{d++;sc=0}}return{n,d,sc}}
+function death(h,m){
+  const t=theoDeath(h,m)/100,c=cellStat(h,m),obs=c.n?c.d/c.n:t;
+  let r;
+  if(S.mode==='hard')r=(c.n+1)*t-c.d;                 // вирівнювання: у підсумку частка смертей = теорія
+  else if(S.mode==='prop')r=t-S.al*(obs-t);             // плавний зсув проти відхилення
+  else r=(c.d+S.kc*t)/(c.n+S.kc);                       // за спостереженнями, теорія — як початок
+  return clamp(r*100);
+}
+const f1=x=>(Math.round(x*10)/10).toFixed(1);
+const VERD=[[25,'🟢 Виживе','good'],[45,'🟡 Радше виживе','good'],[55,'🟠 50/50','mid'],[75,'🔴 Радше помре','bad'],[101,'💀 Помре','bad']];
+const verdict=d=>VERD.find(v=>d<=v[0]);
+const cls=d=>d>=60?'bad':d>=40?'mid':'good';
+const col=d=>d>=60?'var(--bad)':d>=40?'var(--mid)':'var(--ok)';
 
-        const formatPower = (power) => {
-            let p = parseFloat(power);
-            const units = ['GH/s', 'TH/s', 'PH/s', 'EH/s', 'ZH/s'];
-            let unitIndex = 0;
+/* ---------- відображення ---------- */
+function render(){
+  $('al').value=S.al;$('kc').value=S.kc;$('showHid').checked=S.showHid;
+  document.querySelectorAll('#mode button').forEach(b=>b.classList.toggle('on',b.dataset.m===S.mode));
+  $('head').innerHTML='<tr><th>👁</th><th>Хом\'як</th><th>Рівень</th><th>Стати</th><th>Бонус %</th><th>Серія</th><th>Усп/усього</th>'+
+    MAPS.map(m=>`<th class="${m.off?'inactive':''}">${m.n}<small>d${m.d} · ${m.h}h</small><span class="dots">${S.log.filter(e=>e.map===m.id).slice(-5).map(e=>`<span class="${e.ok?'ok':'no'}">●</span>`).join('')}</span></th>`).join('')+'</tr>';
+  $('body').innerHTML=S.ham.map((h,i)=>{
+    if(h.hidden&&!S.showHid)return'';
+    const runs=S.log.filter(e=>e.ham===h.name),ok=runs.filter(e=>e.ok).length;
+    const act=MAPS.filter(m=>!m.off),bestId=act.reduce((a,m)=>death(h,m.id)<death(h,a.id)?m:a,act[0]).id;
+    const cells=MAPS.map(m=>{const d=death(h,m.id);
+      const v=verdict(d),best=m.id===bestId?' best':'';
+      return`<td class="cell${best} ${m.off?'inactive':''}" data-m="${m.id}"><b title="базовий шанс виживання (теорія)">${f1(100-theoDeath(h,m.id))}%</b><small class="vd ${v[2]}">${v[1]}</small><small class="${cls(d)}">☠ ${f1(d)}%${(()=>{const c=cellStat(h,m.id),dl=d-theoDeath(h,m.id);return c.n?` <span class="${dl>0.05?'bad':dl<-0.05?'good':''}">${dl>0?'▲':dl<0?'▼':'='}${f1(Math.abs(dl))}</span><br>✓${c.n-c.d} ✗${c.d}`+(c.sc?` · серія ${c.sc}`:''):''})()}</small>
+<div class="bar"><i style="width:${d}%;background:${col(d)}"></i></div>
+<span class="act"><button class="ok-b" data-a="ok">✓</button><button class="no-b" data-a="no">✗</button></span></td>`}).join('');
+    return`<tr data-i="${i}" class="${h.hidden?'hid':''}"><td><input type="checkbox" data-f="show" ${h.hidden?'':'checked'}></td><td class="name">${avatar(h)}${esc(h.name)}</td>
+<td><input type="number" data-f="lvl" value="${h.lvl}" min="${h.bl}" max="100"></td><td>${stats(h)}</td>
+<td><input type="number" data-f="bonus" value="${h.bonus}" step="0.5"></td>
+<td><input type="number" data-f="start" value="${h.start||0}" min="0" title="стартова серія; зараз: ${streakNow(h)}"> <small>→${streakNow(h)}</small></td>
+<td>${ok}/${runs.length}</td>${cells}</tr>`}).join('');
 
-            while (p >= 1000 && unitIndex < units.length - 1) {
-                p /= 1000;
-                unitIndex++;
-            }
+  const hid=S.ham.map((h,i)=>({h,i})).filter(x=>x.h.hidden);
+  $('hidBox').style.display=hid.length?'':'none';$('hidCnt').textContent=hid.length;
+  $('hidList').innerHTML=hid.map(x=>`<label style="display:inline-block;margin:0 10px 4px 0;font-size:12px;color:var(--tx)"><input type="checkbox" data-hi="${x.i}"> ${esc(x.h.name)}</label>`).join('');
+  // підсумок
+  const a=agg(),obs=a.n?a.d/a.n*100:0,exp=a.n?a.e/a.n*100:0,r=ratio(a);
+  $('sum').innerHTML=[['Спроб',a.n],['Смертей',a.d],['Спостер. смерть',a.n?f1(obs)+'%':'—'],['Очікувана (теорія)',a.n?f1(exp)+'%':'—'],['Коефіцієнт',a.n?r.toFixed(2):'—']]
+    .map(([l,v])=>`<div class="stat"><b>${v}</b><span>${l}</span></div>`).join('');
+  $('gauge').innerHTML=(a.n?`<i style="left:${obs}%"></i><i class="exp" style="left:${exp}%"></i>`:'');
 
-            return `${p.toFixed(3)} ${units[unitIndex]}`;
-        };
+  if(!$('rMap').options.length)$('rMap').innerHTML=MAPS.map(m=>`<option value="${m.id}">${m.n}</option>`).join('');
+  $('recent').innerHTML=S.log.filter(e=>e.map===$('rMap').value).slice(-(+$('rN').value)).reverse().map(e=>`<tr><td>${new Date(e.ts).toLocaleString()}</td><td>${esc(e.ham)}</td><td class="${e.ok?'good':'bad'}">${e.ok?'✓':'✗'}</td><td>${e.lvl}</td><td>${e.streak}</td><td>${f1(e.risk)}%</td></tr>`).join('')||'<tr><td colspan="6">Ще немає записів</td></tr>';
+  {const m={};for(const e of S.log){const k=e.ham+'|'+e.map;(m[k]=m[k]||{ham:e.ham,map:e.map,n:0,ok:0,ex:0}).n++;const q=m[k];if(e.ok)q.ok++;q.ex+=1-e.risk/100}
+   const rows=Object.values(m).sort((x,y)=>y.n-x.n),tot=rows.reduce((a,q)=>({n:a.n+q.n,ok:a.ok+q.ok,ex:a.ex+q.ex}),{n:0,ok:0,ex:0});
+   const line=(l1,l2,q,b)=>{const o=q.ok/q.n*100,e=q.ex/q.n*100,d=o-e;return`<tr${b?' style="font-weight:700"':''}><td>${l1}</td><td>${l2}</td><td>${q.ok}</td><td>${q.n-q.ok}</td><td>${f1(o)}%</td><td>${f1(e)}%</td><td class="${Math.abs(d)<5?'good':Math.abs(d)<12?'mid':'bad'}">${d>0?'+':''}${f1(d)}</td></tr>`};
+   $('bal').innerHTML=rows.length?line('УСЬОГО','',tot,true)+rows.map(q=>line(esc(q.ham),esc(mapOf(q.map).n),q)).join(''):'<tr><td colspan="7">Ще немає записів</td></tr>'}
+  // по серіях
+  $('byStreak').innerHTML=[0,1,2,3].map(b=>{const g=agg(x=>bucket(x.streak)===b);return row([b===3?'3+':b,g,])}).join('');
+  $('byMap').innerHTML=MAPS.map(m=>{const g=agg(x=>x.map===m.id);return row([m.n,g])}).join('');
+  function row([lbl,g]){return`<tr><td>${lbl}</td><td>${g.n}</td><td>${g.d}</td><td>${g.n?f1(g.d/g.n*100)+'%':'—'}</td><td>${g.n?f1(g.e/g.n*100)+'%':'—'}</td><td>${g.n?ratio(g).toFixed(2):'—'}</td></tr>`}
 
-        const nick = document.getElementById('nicknameInput').value;
-        const loader = document.getElementById('loader');
-        const tableBody = document.getElementById('tableBody');
-        const leagueInfo = document.getElementById('leagueInfo');
+  $('log').innerHTML=S.log.slice().reverse().map(e=>`<tr data-id="${e.id}"><td>${new Date(e.ts).toLocaleString()}</td><td>${esc(e.ham)}</td><td>${esc(mapOf(e.map).n)}</td>
+<td class="${e.ok?'good':'bad'}">${e.ok?'✓':'✗'}</td><td>${e.lvl}</td><td>${e.streak}</td><td>${f1(e.risk)}%</td><td><button data-a="del">🗑</button></td></tr>`).join('')||'<tr><td colspan="8">Журнал порожній</td></tr>';
+}
 
-        if (!nick) return;
+/* ---------- події ---------- */
+let tt;function toast(msg){$('toastTx').textContent=msg;$('toast').classList.add('on');clearTimeout(tt);tt=setTimeout(()=>$('toast').classList.remove('on'),7000)}
+function undo(){const e=S.log.pop();if(!e)return;save();render();$('toast').classList.remove('on');
+  const m=document.createElement('span');toast('Скасовано: '+e.ham+' · '+mapOf(e.map).n+' '+(e.ok?'✓':'✗'))}
+$('undo').onclick=$('toastUndo').onclick=undo;
+$('hidBack').onclick=()=>{document.querySelectorAll('#hidList input:checked').forEach(c=>{S.ham[+c.dataset.hi].hidden=false});save();render()};
+$('rMap').onchange=$('rN').onchange=render;
+$('mode').onclick=e=>{const b=e.target.closest('button');if(b){S.mode=b.dataset.m;save();render()}};
+$('kc').onchange=e=>{S.kc=Math.max(.5,parseFloat(e.target.value)||5);save();lazyRender()};
+$('al').onchange=e=>{S.al=Math.max(0,parseFloat(e.target.value)||0);save();lazyRender()};
+$('showHid').onchange=e=>{S.showHid=e.target.checked;save();render()};
+$('body').onchange=e=>{const tr=e.target.closest('tr'),f=e.target.dataset.f;if(!tr||!f)return;const h=S.ham[tr.dataset.i];
+  if(f==='show')h.hidden=!e.target.checked;else if(f==='lvl')h.lvl=Math.max(h.bl,Math.min(100,parseInt(e.target.value,10)||h.bl));
+  else h[f]=parseFloat(e.target.value)||0;save();lazyRender()};
+$('body').onclick=e=>{const b=e.target.closest('button[data-a]');if(!b)return;const h=S.ham[b.closest('tr').dataset.i],m=b.closest('td').dataset.m;
+  S.log.push({id:Date.now()+Math.random().toString(16).slice(2,6),ts:Date.now(),ham:h.name,map:m,ok:b.dataset.a==='ok',lvl:h.lvl,streak:streakNow(h),risk:theoDeath(h,m)});save();clearTimeout(rt);render();toast(h.name+' · '+mapOf(m).n+' '+(b.dataset.a==='ok'?'✓ пройшов':'✗ помер'))};
+$('log').onclick=e=>{const b=e.target.closest('button[data-a=del]');if(b){S.log=S.log.filter(x=>x.id!==b.closest('tr').dataset.id);save();render()}};
+$('add').onclick=()=>{const n=$('nn').value.trim();if(!n||S.ham.some(h=>h.name===n))return;S.ham.push({name:n,stats:parseFloat($('ns').value)||100,bonus:0,bl:1,lvl:1,start:0,hidden:false});$('nn').value='';save();render()};
+$('clr').onclick=()=>{if(confirm('Очистити весь журнал?')){S.log=[];save();render()}};
 
-        loader.style.display = 'block';
-        tableBody.innerHTML = '';
-        leagueInfo.innerHTML = '';
-
-        try {
-            await loadRewardsData();
-            await loadCryptoPrices();
-
-            const userResp = await fetch(PROXY + encodeURIComponent(`${API_BASE}/RollercoinUser?userName=${nick}`));
-            const userData = await userResp.json();
-
-            const userPower = userData.userPowerResponseDto.current_Power || 0;
-            const userLeagueId = userData.userProfileResponseDto.league_Id;
-
-            const leagueResp = await fetch(PROXY + encodeURIComponent(`${API_BASE}/League`));
-            const leaguesData = await leagueResp.json();
-
-            const currentLeague = leaguesData.find(l => l.id === userLeagueId) || leaguesData[0];
-
-            const nextLeagueId = leaguesData.findIndex(l => l.id === userLeagueId) || null;
-
-            const nextLeague = leaguesData[nextLeagueId + 1];
-            document.querySelector("#nextLeagueHeader span")
-                .textContent = nextLeague ? nextLeague.title : "Макс. рівень";
-
-            leagueInfo.style.textAlign = "center";
-            leagueInfo.style.width = "100%";
-
-
-            leagueInfo.innerHTML = `ПОТОЧНА ЛІГА: ${currentLeague.title}<br>ПОТУЖНІСТЬ: ${formatPower(userPower)}`;
-
-
-            currentLeague.currencies.forEach(coin => {
-                console.log(coin.name);
-                const netPower = coin.totalPower;
-
-                let name = coin.name.toLowerCase().replace('_small', '').trim();
-
-                const nextLeagueCurrencies = nextLeague.currencies.find(c => c.name === coin.name);
-
-                let nextNetPower;
-                let nextReward;
-                let nextBlockTime;
-
-                if (nextLeagueCurrencies) {
-                    nextNetPower = nextLeagueCurrencies?.totalPower || 0;
-                    nextReward = nextLeagueCurrencies?.payoutAmount || 0;
-                    nextBlockTime = nextLeagueCurrencies?.duration || 0;
-
-                }
-
-                if (name === 'sat') {
-                    name = 'btc'
-                }
-
-                if (name === 'matic') {
-                    name = 'pol'
-                }
-
-                const reward = getRewardForCoin(name, coin.payoutAmount);
-
-                const blockTime = coin.duration;
-                let { divisor, prec, geckoId} = getCoinConfig(name);
-
-
-                // 1. Рахуємо частку від блоку
-                const rewardPerBlock = (userPower / netPower) * reward;
-
-                const diff = blockTime / nextBlockTime;
-                console.log("diff" + diff);
-
-                const neededPower = ((rewardPerBlock * nextNetPower) / nextReward) / diff || 0;
-
-                // 2. Рахуємо кількість блоків на добу
-                const blocksPerDay = 86400 / blockTime;
-                // 3. Фінальний результат з урахуванням дільника (to_small)
-                const dailyRaw = (rewardPerBlock * blocksPerDay) / divisor;
-
-                let usdPrice = 0;
-                if (name === 'rlt' || name === 'rst' || name === 'hmt' || name === 'usdt') {
-                    usdPrice = dailyRaw; // 1 RLT = 1 USD
-                } else if (geckoId && cryptoPrices[geckoId]) {
-                    usdPrice = dailyRaw * cryptoPrices[geckoId];
-                }
-
-                results.push({
-                    name: name,
-                    netPower: netPower,
-                    neededPower: neededPower,
-                    dailyRaw: dailyRaw,
-                    usdPrice: usdPrice,
-                    prec: prec
-                });
-            });
-
-        } catch (e) {
-            console.error(e);
-            tableBody.innerHTML = `<tr><td colspan="5" style="color:red; text-align:center;">Помилка отримання даних</td></tr>`;
-        } finally {
-            loader.style.display = 'none';
-        }
-        results.sort((a, b) => b.usdPrice - a.usdPrice);
-
-        results.forEach(data => {
-            const isSpecial = ['rlt', 'rst', 'hmt'].includes(data.name);
-
-            const row = `<tr>
-        <td style="color: #22d3ee; font-weight: bold;">${data.name}</td>
-        <td>${formatPower(data.netPower)}</td>
-        <td>${data.neededPower > 0 ? formatPower(data.neededPower) : "Монета не доступна"}</td>
-        <td style="color: #22d3ee;">${data.dailyRaw.toFixed(data.prec)}
-            <br><span style="color: #37f31c;">${data.usdPrice.toFixed(2)}${isSpecial ? '' : '$'}</span></td>
-        <td>${(data.dailyRaw * 7).toFixed(data.prec > 6 ? 6 : data.prec)}
-            <br>${(data.usdPrice * 7).toFixed(2)}${isSpecial ? '' : '$'}</td>
-        <td>${(data.dailyRaw * 30).toFixed(data.prec > 4 ? 4 : data.prec)}
-            <br>${(data.usdPrice * 30).toFixed(2)}${isSpecial ? '' : '$'}</td>
-    </tr>`;
-
-            tableBody.innerHTML += row;
-        });
-    }
+/* ---------- Excel / файли ---------- */
+const loadX=()=>window.XLSX?Promise.resolve(XLSX):new Promise((res,rej)=>{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';s.onload=()=>res(window.XLSX);s.onerror=rej;document.head.appendChild(s)});
+function tables(){
+  const log=S.log.map(e=>({ID:e.id,Date:new Date(e.ts).toISOString(),Hamster:e.ham,Expedition:mapOf(e.map).n,Result:e.ok?'success':'fail',Level:e.lvl,'Streak before':e.streak,'Theory death %':+e.risk.toFixed(2)}));
+  const ham=S.ham.map(h=>({Hamster:h.name,'Base stats':h.stats,'Base level':h.bl,Level:h.lvl,'Bonus %':h.bonus,'Start streak':h.start||0,Hidden:h.hidden?1:0}));
+  return{log,ham}}
+$('exp').onclick=async()=>{const{log,ham}=tables();
+  try{const X=await loadX(),wb=X.utils.book_new();
+    X.utils.book_append_sheet(wb,X.utils.json_to_sheet(log.length?log:[{ID:'',Date:'',Hamster:'',Expedition:'',Result:'',Level:'','Streak before':'','Theory death %':''}]),'Log');
+    X.utils.book_append_sheet(wb,X.utils.json_to_sheet(ham),'Hamsters');X.writeFile(wb,'hamster_expeditions.xlsx')}
+  catch(err){const keys=Object.keys(log[0]||{ID:1});const csv='﻿'+[keys.join(';')].concat(log.map(r=>keys.map(k=>r[k]).join(';'))).join('\n');
+    dl(new Blob([csv],{type:'text/csv'}),'hamster_log.csv');dl(new Blob([JSON.stringify(S)],{type:'application/json'}),'hamster_backup.json')}};
+function dl(b,n){const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=n;a.click()}
+$('imp').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;
+  if(f.name.endsWith('.json')){const o=JSON.parse(await f.text());if(o.ham&&o.log){S=o;save();render()}return}
+  const X=await loadX(),wb=X.read(await f.arrayBuffer()),rows=n=>wb.Sheets[n]?X.utils.sheet_to_json(wb.Sheets[n]):[];
+  const ham=rows('Hamsters').filter(r=>r.Hamster).map(r=>({name:String(r.Hamster),stats:+r['Base stats']||0,bl:+r['Base level']||1,lvl:+r.Level||1,bonus:+r['Bonus %']||0,start:+r['Start streak']||0,hidden:!!+r.Hidden}));
+  const log=rows('Log').filter(r=>r.Hamster&&r.Date).map((r,i)=>({id:String(r.ID||'i'+i+Date.now()),ts:Date.parse(r.Date)||Date.now(),ham:String(r.Hamster),map:(MAPS.find(m=>m.n===r.Expedition)||MAPS[0]).id,ok:r.Result==='success',lvl:+r.Level||1,streak:+r['Streak before']||0,risk:+r['Theory death %']||0}));
+  if(ham.length)S.ham=ham;S.log=log;save();render()};
+$('imgNet').onclick=async()=>{let ok=0,fail=0;$('imgMsg').textContent='Завантаження…';
+  for(const h of S.ham){const sl=slug(h.name),lv=h.bl>=50?'lvl50':'lvl01';
+    try{const r=await fetch(REMOTE+sl+'/'+lv+'/idle.png?v=2',{mode:'cors'});if(!r.ok)throw 0;const b=await r.blob();if(!b.type.startsWith('image'))throw 0;await idbPut(sl,b);IMG[sl]=URL.createObjectURL(b);ok++}catch(e){fail++}}
+  $('imgMsg').textContent=`Готово: ${ok} збережено, ${fail} не вдалося`+(fail?' (сайт блокує завантаження — скористайся «Вибрати файли» або «Вибрати папку»)':'');render()};
+$('imgFiles').onchange=$('imgDir').onchange=async e=>{let ok=0,skip=0;const names=new Set(S.ham.map(h=>slug(h.name)));
+  for(const f of e.target.files){const sl=slug(f.name.replace(/\.[^.]+$/,''));if(names.has(sl)){await idbPut(sl,f);IMG[sl]=URL.createObjectURL(f);ok++}else skip++}
+  e.target.value='';$('imgMsg').textContent=`Розставлено: ${ok}, пропущено (немає такого хом'яка): ${skip}`;render()};
+idbLoad().then(render);render();
 </script>
-<script src="script.js"></script>
-<img src="https://api.counterapi.dev/v2/vasil-arabcuks-team-3598/supercalc/up" style="display:none;">
 </body>
 </html>
